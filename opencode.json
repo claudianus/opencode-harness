@@ -141,7 +141,6 @@
             "description": "Fast codebase exploration agent. Use when you need to: quickly find files by pattern or name, search for specific code patterns or keywords, understand directory structure, locate function or class definitions, or answer questions about what exists in the codebase.",
             "mode": "subagent",
             "temperature": 0.0,
-            "maxSteps": 15,
             "tools": {
                 "write": false,
                 "edit": false,
@@ -159,7 +158,6 @@
             "description": "Documentation and API research agent. Use when you need to: look up library documentation, find API references, research best practices, understand framework patterns, check package versions or compatibility, or gather information from external sources before implementation.",
             "mode": "subagent",
             "temperature": 0.3,
-            "maxSteps": 25,
             "tools": {
                 "write": false,
                 "edit": false,
@@ -181,7 +179,6 @@
             "description": "Code review and quality assessment agent. Use when you need to: review code changes for bugs or issues, assess code quality and maintainability, check for anti-patterns or code smells, evaluate architectural decisions, or provide feedback on pull requests without making changes.",
             "mode": "primary",
             "temperature": 0.1,
-            "maxSteps": 20,
             "tools": {
                 "write": false,
                 "edit": false,
@@ -199,7 +196,6 @@
             "description": "Test creation and validation agent. Use when you need to: write unit tests, integration tests, or end-to-end tests, run existing test suites, analyze test coverage, fix failing tests, or validate that code changes don't break existing functionality.",
             "mode": "subagent",
             "temperature": 0.2,
-            "maxSteps": 25,
             "tools": {
                 "write": true,
                 "edit": true,
@@ -217,7 +213,6 @@
             "description": "Code refactoring agent. Use when you need to: improve code structure without changing behavior, extract methods or classes, rename variables for clarity, reduce code duplication, apply design patterns, or modernize legacy code.",
             "mode": "subagent",
             "temperature": 0.2,
-            "maxSteps": 25,
             "tools": {
                 "write": false,
                 "edit": true,
@@ -235,7 +230,6 @@
             "description": "Bug investigation and debugging agent. Use when you need to: investigate runtime errors, trace execution flow, analyze stack traces, examine logs, bisect commits to find regressions, or diagnose performance issues.",
             "mode": "subagent",
             "temperature": 0.2,
-            "maxSteps": 25,
             "tools": {
                 "write": false,
                 "edit": false,
@@ -254,7 +248,6 @@
             "description": "Infrastructure and DevOps agent. Use when you need to: write or modify Dockerfiles, create Kubernetes manifests, configure CI/CD pipelines (GitHub Actions, GitLab CI), manage Terraform or infrastructure-as-code, handle cloud provider configurations, set up monitoring or logging, or troubleshoot deployment issues.",
             "mode": "subagent",
             "temperature": 0.1,
-            "maxSteps": 30,
             "tools": {
                 "write": true,
                 "edit": true,
@@ -276,7 +269,6 @@
             "description": "Security auditing agent. Use when you need to: scan for vulnerabilities in dependencies, identify security anti-patterns in code, audit authentication or authorization logic, check for secrets or credentials in code, review input validation, assess API security, or generate security reports.",
             "mode": "subagent",
             "temperature": 0.1,
-            "maxSteps": 20,
             "tools": {
                 "write": false,
                 "edit": false,
@@ -295,7 +287,6 @@
             "description": "Documentation agent. Use when you need to: write or update README files, create API documentation, generate code comments or docstrings, write architecture decision records, create user guides, or maintain changelog entries.",
             "mode": "subagent",
             "temperature": 0.3,
-            "maxSteps": 15,
             "tools": {
                 "write": true,
                 "edit": true,
@@ -313,7 +304,6 @@
             "description": "Database and schema migration agent. Use when you need to: create or modify database migrations, update ORM schemas (Prisma, Drizzle, TypeORM), write SQL migration scripts, handle data backfills, manage schema versioning, or coordinate database changes across environments.",
             "mode": "subagent",
             "temperature": 0.1,
-            "maxSteps": 25,
             "tools": {
                 "write": true,
                 "edit": true,
@@ -331,7 +321,6 @@
             "description": "Performance profiling and optimization agent. Use when you need to: analyze bundle sizes, run lighthouse audits, profile memory usage, identify performance bottlenecks, optimize database queries, measure load times, or investigate memory leaks.",
             "mode": "subagent",
             "temperature": 0.2,
-            "maxSteps": 25,
             "tools": {
                 "write": false,
                 "edit": false,
@@ -351,7 +340,6 @@
             "description": "API design and integration agent. Use when you need to: design REST or GraphQL APIs, create OpenAPI/Swagger specifications, generate API clients or SDKs, implement API versioning, write contract tests, or integrate with external APIs.",
             "mode": "subagent",
             "temperature": 0.2,
-            "maxSteps": 25,
             "tools": {
                 "write": true,
                 "edit": true,
@@ -373,7 +361,6 @@
             "description": "Data pipeline and transformation agent. Use when you need to: build ETL pipelines, transform data with pandas/polars, create dbt models, write Spark jobs, design data workflows, or implement data validation and quality checks.",
             "mode": "subagent",
             "temperature": 0.2,
-            "maxSteps": 30,
             "tools": {
                 "write": true,
                 "edit": true,
