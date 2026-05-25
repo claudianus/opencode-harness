@@ -12,11 +12,27 @@ chmod +x install.sh && ./install.sh
 |-----------|-------|---------|
 | **Inline Agents** | 15 | Plan, Build, Reviewer (primaries) + 12 workflow subagents |
 | **Agency Domain Specialists** | 184 | Tier 2 specialists from [agency-agents](https://github.com/msitarzewski/agency-agents) |
-| **MCP Servers** | 7 | lean-ctx, codegraph, maru-deep-pro-search, agentmemory, chrome-devtools, playwright, open-design |
+| **MCP Servers** | 7 | See [MCP install methods](#mcp-server-install-methods) below |
 | **NPM Plugins** | 7 | vibeguard, notify, smart-title, handoff, synced, mystatus, DCP |
 | **Context Pruning** | DCP | 250k soft limit, dedup + error purge, soft nudge force |
 | **Agent Prompts** | 2 | build.md (orchestration) + plan.md (coordination) |
 | **Quality Pipeline** | 4-phase | Runtime smoke → Validation → Polish → Merge gate |
+
+### MCP Server Install Methods
+
+Each MCP server uses its **official install method**, not ad-hoc commands:
+
+| MCP Server | Official Install | Source |
+|-----------|-----------------|--------|
+| **agentmemory** | `npm install -g @agentmemory/agentmemory && agentmemory &` | [rohitg00/agentmemory](https://github.com/rohitg00/agentmemory) (17k★) |
+| **chrome-devtools** | `npm install -g chrome-devtools-mcp` | [ChromeDevTools](https://developer.chrome.com/docs/devtools/agents/get-started) |
+| **playwright** | `npm install -g @playwright/mcp && npx playwright install chromium` | [microsoft/playwright-mcp](https://github.com/microsoft/playwright-mcp) (33k★) |
+| **lean-ctx** | `curl -fsSL https://leanctx.com/install.sh \| sh` | [yvgude/lean-ctx](https://github.com/yvgude/lean-ctx) (2.2k★) |
+| **codegraph** | `curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh \| sh` | [@colbymchenry/codegraph](https://www.npmjs.com/package/@colbymchenry/codegraph) |
+| **maru-deep-pro-search** | Custom (not publicly distributed) | — |
+| **open-design** | Download from [open-design.ai](https://open-design.ai) | [nexu-io/open-design](https://github.com/nexu-io/open-design) (51k★) |
+
+> `install.sh` checks each MCP server and prints its official install command if missing. No ad-hoc workarounds.
 
 ## Architectures
 

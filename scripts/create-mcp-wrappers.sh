@@ -38,10 +38,17 @@ for name in "${!MCP_SERVERS[@]}"; do
     cat > "$wrapper" << 'SCRIPT_EOF'
 #!/usr/bin/env bash
 # Singleton-safe wrapper — kills old instance before starting new one.
+# Uses pgrep to find OTHER instances (excludes self by PID).
 BINARY_NAME="$(basename "${BASH_SOURCE[0]}" -safe)"
-pkill -f "${BINARY_NAME}" 2>/dev/null || true
+BINARY_PATH="$(command -v "${BINARY_NAME}")"
+
+# Kill old instances (skip self)
+for pid in $(pgrep -f "${BINARY_NAME}" 2>/dev/null || true); do
+    [[ "$pid" == "$$" ]] && continue
+    kill "$pid" 2>/dev/null || true
+done
 sleep 0.3
-exec "$(which "${BINARY_NAME}")" "$@"
+exec "${BINARY_PATH}" "$@"
 SCRIPT_EOF
 
     chmod +x "$wrapper"
