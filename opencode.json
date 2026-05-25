@@ -5,55 +5,17 @@
     "mcp": {
         "agentmemory": {
             "command": [
-                "npx",
-                "-y",
-                "@agentmemory/mcp"
+                "{{HOME}}/.local/bin/agentmemory-mcp-safe"
             ],
             "enabled": true,
             "type": "local"
         },
         "chrome-devtools": {
             "command": [
-                "npx",
-                "-y",
-                "chrome-devtools-mcp"
+                "{{HOME}}/.local/bin/chrome-devtools-mcp-safe"
             ],
             "enabled": true,
             "type": "local"
-        },
-        "lean-ctx": {
-            "command": [
-                "{{HOME}}/.local/bin/lean-ctx"
-            ],
-            "enabled": true,
-            "environment": {
-                "LEAN_CTX_DATA_DIR": "{{HOME}}/.config/lean-ctx"
-            },
-            "type": "local"
-        },
-        "maru-deep-pro-search": {
-            "command": [
-                "{{HOME}}/.local/bin/maru-deep-pro-search"
-            ],
-            "enabled": true,
-            "type": "local"
-        },
-        "playwright": {
-            "command": [
-                "npx",
-                "-y",
-                "@playwright/mcp"
-            ],
-            "enabled": true,
-            "type": "local"
-        },
-        "open-design": {
-            "enabled": true,
-            "type": "local",
-            "command": [
-                "{{HOME}}/.local/bin/od",
-                "mcp"
-            ]
         },
         "codegraph": {
             "type": "local",
@@ -63,6 +25,38 @@
                 "--mcp"
             ],
             "enabled": true
+        },
+        "lean-ctx": {
+            "command": [
+                "{{HOME}}/.local/bin/lean-ctx"
+            ],
+            "enabled": true,
+            "environment": {
+                "LEAN_CTX_DATA_DIR": "{{HOME}}/.lean-ctx"
+            },
+            "type": "local"
+        },
+        "maru-deep-pro-search": {
+            "type": "local",
+            "command": [
+                "{{HOME}}/.local/bin/maru-deep-pro-search"
+            ],
+            "enabled": true
+        },
+        "open-design": {
+            "enabled": true,
+            "type": "local",
+            "command": [
+                "{{HOME}}/.local/bin/od",
+                "mcp"
+            ]
+        },
+        "playwright": {
+            "command": [
+                "{{HOME}}/.local/bin/playwright-mcp-safe"
+            ],
+            "enabled": true,
+            "type": "local"
         }
     },
     "permission": {
@@ -137,6 +131,23 @@
                 "playwright*": true
             }
         },
+        "reviewer": {
+            "description": "Code review and quality assessment agent. Use when you need to: review code changes for bugs or issues, assess code quality and maintainability, check for anti-patterns or code smells, evaluate architectural decisions, or provide feedback on pull requests without making changes.",
+            "mode": "primary",
+            "temperature": 0.1,
+            "tools": {
+                "write": false,
+                "edit": false,
+                "patch": false,
+                "bash": false,
+                "read": true,
+                "grep": true,
+                "glob": true,
+                "list": true,
+                "webfetch": false,
+                "lean-ctx*": true
+            }
+        },
         "scout": {
             "description": "Fast codebase exploration agent. Use when you need to: quickly find files by pattern or name, search for specific code patterns or keywords, understand directory structure, locate function or class definitions, or answer questions about what exists in the codebase.",
             "mode": "subagent",
@@ -175,21 +186,22 @@
                 "playwright*": true
             }
         },
-        "reviewer": {
-            "description": "Code review and quality assessment agent. Use when you need to: review code changes for bugs or issues, assess code quality and maintainability, check for anti-patterns or code smells, evaluate architectural decisions, or provide feedback on pull requests without making changes.",
-            "mode": "primary",
-            "temperature": 0.1,
+        "debug": {
+            "description": "Bug investigation and debugging agent. Use when you need to: investigate runtime errors, trace execution flow, analyze stack traces, examine logs, bisect commits to find regressions, or diagnose performance issues.",
+            "mode": "subagent",
+            "temperature": 0.2,
             "tools": {
                 "write": false,
                 "edit": false,
                 "patch": false,
-                "bash": false,
+                "bash": true,
                 "read": true,
                 "grep": true,
                 "glob": true,
                 "list": true,
                 "webfetch": false,
-                "lean-ctx*": true
+                "lean-ctx*": true,
+                "agentmemory*": true
             }
         },
         "tester": {
@@ -224,24 +236,6 @@
                 "list": true,
                 "webfetch": false,
                 "lean-ctx*": true
-            }
-        },
-        "debug": {
-            "description": "Bug investigation and debugging agent. Use when you need to: investigate runtime errors, trace execution flow, analyze stack traces, examine logs, bisect commits to find regressions, or diagnose performance issues.",
-            "mode": "subagent",
-            "temperature": 0.2,
-            "tools": {
-                "write": false,
-                "edit": false,
-                "patch": false,
-                "bash": true,
-                "read": true,
-                "grep": true,
-                "glob": true,
-                "list": true,
-                "webfetch": false,
-                "lean-ctx*": true,
-                "agentmemory*": true
             }
         },
         "devops": {
@@ -381,6 +375,7 @@
         "opencode-smart-title",
         "opencode-handoff",
         "opencode-synced",
-        "opencode-mystatus"
+        "opencode-mystatus",
+        "@tarquinen/opencode-dcp@latest"
     ]
 }

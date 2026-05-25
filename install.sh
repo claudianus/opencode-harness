@@ -5,7 +5,9 @@
 # Recreates the full OpenCode agent ecosystem on any machine:
 #   15 inline agents (Plan/Build/Review + 12 workflow subagents)
 #   184 Agency domain specialists (github.com/msitarzewski/agency-agents)
-#   7 MCP servers (lean-ctx, codegraph, maru-deep-pro-search, ...)
+#   7 MCP servers (lean-ctx, codegraph, maru-deep-pro-search, chrome-devtools, ...)
+#   7 npm plugins (vibeguard, notify, smart-title, handoff, synced, mystatus, DCP)
+#   DCP context pruning — 250k soft limit, dedup + error purge
 #   Quality pipeline: Code Review → Security → Test validation
 #
 # Usage:
@@ -14,7 +16,7 @@
 # What this does NOT handle (do manually):
 #   - API keys (DeepSeek, OpenRouter, etc.) → run: opencode providers login
 #   - GitHub token for opencode-synced → set GITHUB_TOKEN env var
-#   - git-ai plugin (optional, user-specific)
+#   - maru-deep-pro-search (custom tool — install separately if needed)
 # =============================================================================
 
 set -euo pipefail
@@ -61,9 +63,18 @@ if [[ -f "$OPENCODE_CONFIG/opencode.json" ]]; then
     warn "opencode.json already exists — backing up to opencode.json.bak"
     cp "$OPENCODE_CONFIG/opencode.json" "$OPENCODE_CONFIG/opencode.json.bak"
 fi
-# Substitute {{HOME}} placeholder with actual home path
 sed "s|{{HOME}}|$HOME|g" "$HARNESS_DIR/opencode.json" > "$OPENCODE_CONFIG/opencode.json"
 ok "opencode.json installed (paths resolved)"
+
+# ── DCP Config ──────────────────────────────────────────────────────────────
+step "Installing DCP context pruning config"
+
+if [[ -f "$OPENCODE_CONFIG/dcp.jsonc" ]]; then
+    warn "dcp.jsonc already exists — backing up to dcp.jsonc.bak"
+    cp "$OPENCODE_CONFIG/dcp.jsonc" "$OPENCODE_CONFIG/dcp.jsonc.bak"
+fi
+cp "$HARNESS_DIR/dcp.jsonc" "$OPENCODE_CONFIG/dcp.jsonc"
+ok "dcp.jsonc installed (250k soft limit, dedup + error purge)"
 
 # ── Prompts ──────────────────────────────────────────────────────────────────
 step "Installing agent prompts"
@@ -80,7 +91,6 @@ ok "AGENTS.md installed"
 step "Installing local plugins"
 cp "$HARNESS_DIR/plugins/lean-ctx.ts" "$OPENCODE_PLUGINS/lean-ctx.ts"
 ok "lean-ctx.ts plugin installed"
-warn "git-ai.ts plugin NOT installed (user-specific, optional)"
 
 # ── Agency Agents (184 domain specialists) ──────────────────────────────────
 step "Installing Agency domain specialists (184 agents)"
@@ -119,10 +129,13 @@ PLUGINS=(
     opencode-handoff
     opencode-synced
     opencode-mystatus
+    @tarquinen/opencode-dcp@latest
 )
 
 for plugin in "${PLUGINS[@]}"; do
-    if [[ -d "${HOME}/.cache/opencode/packages/${plugin}@latest" ]]; then
+    pkg_name="${plugin%@*}"  # strip @latest suffix for cache check
+    if [[ -d "${HOME}/.cache/opencode/packages/${pkg_name}@latest" ]] || \
+       [[ -d "${HOME}/.cache/opencode/packages/${plugin}" ]]; then
         ok "$plugin (already installed)"
     else
         opencode plugin -g "$plugin" 2>&1 | tail -1 && ok "$plugin" || warn "$plugin install failed"
@@ -134,7 +147,11 @@ step "MCP Server Setup"
 
 echo ""
 echo "  Some MCP servers require manual installation."
-echo "  npm-based servers (agentmemory, chrome-devtools, playwright) auto-install via npx."
+echo "  The harness uses singleton-safe wrappers at ~/.local/bin/ to prevent"
+echo "  process accumulation. If wrappers don't exist, install globally:"
+echo ""
+echo "    npm install -g @agentmemory/mcp chrome-devtools-mcp @playwright/mcp"
+echo "    ${HARNESS_DIR}/scripts/create-mcp-wrappers.sh  # creates singleton-safe wrappers"
 echo ""
 
 # --- lean-ctx ---
@@ -159,6 +176,7 @@ if command -v maru-deep-pro-search &>/dev/null; then
     ok "maru-deep-pro-search installed"
 else
     warn "maru-deep-pro-search not found (custom tool, may need manual build)"
+    echo "  See: https://github.com/claudianus/maru-deep-pro-search"
 fi
 
 # --- open-design (od) ---
@@ -166,6 +184,23 @@ if command -v od &>/dev/null; then
     ok "od (open-design) installed"
 else
     warn "od (open-design) not found. Download from open-design.ai"
+fi
+
+# --- chrome-devtools + playwright + agentmemory MCP ---
+MISSING_MCP=0
+for bin in agentmemory-mcp chrome-devtools-mcp playwright-mcp; do
+    if command -v "$bin" &>/dev/null; then
+        ok "$bin found"
+    else
+        warn "$bin not found"
+        MISSING_MCP=1
+    fi
+done
+if [[ $MISSING_MCP -eq 1 ]]; then
+    echo ""
+    echo "  Install MCP servers:"
+    echo "    npm install -g @agentmemory/mcp chrome-devtools-mcp @playwright/mcp"
+    echo "    bash ${HARNESS_DIR}/scripts/create-mcp-wrappers.sh"
 fi
 
 # ── API Keys ─────────────────────────────────────────────────────────────────
@@ -191,6 +226,7 @@ echo "  ┌───────────────────────
 echo "  │  ${BOLD}OpenCode Harness — Setup Complete${RESET}                    │"
 echo "  ├──────────────────────────────────────────────────────┤"
 echo "  │  Config:     ~/.config/opencode/opencode.json        │"
+echo "  │  DCP:        ~/.config/opencode/dcp.jsonc            │"
 echo "  │  Prompts:    ~/.config/opencode/.opencode/prompts/   │"
 echo "  │  AGENTS.md:  ~/.config/opencode/AGENTS.md            │"
 echo "  │  Agents:     ${AGENT_COUNT} agency + 15 inline              │"
@@ -203,4 +239,5 @@ echo "  1. Configure API keys:  ${CYAN}opencode providers login${RESET}"
 echo "  2. Restart OpenCode:    quit + reopen TUI"
 echo "  3. Verify agents:       ${CYAN}opencode agent list${RESET}"
 echo "  4. Init CodeGraph:      ${CYAN}codegraph init -i${RESET} (per project)"
+echo "  5. Verify DCP:          check ~/.config/opencode/dcp.jsonc"
 echo ""

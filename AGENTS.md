@@ -6,7 +6,7 @@ This project uses a **Plan-first, two-tier agent hierarchy** with 184 domain spe
 
 ```
 Tier 1 — Workflow Agents (12, inline config)
-  Orchestrate tasks by type: scout, research, debug, tester, reviewer, refactor,
+  Orchestrate tasks by type: scout, research, debug, tester, Code Reviewer, refactor,
   devops, security, docs, migrate, perf, api, data
 
 Tier 2 — Domain Specialists (184, auto-discovered from ~/.config/opencode/agents/)
@@ -149,9 +149,15 @@ Use for: planning, coordination, pipeline orchestration.
 After implementation, always run this pipeline. Delegate in parallel when possible:
 
 ```
+Phase 0 — Runtime Smoke (for integration/processing code — NOT OPTIONAL):
+  When the task involves: new library integration, extraction/processing pipeline
+  changes, external API calls, or function signature changes → run a 1-shot
+  verification script on 3+ real inputs BEFORE proceeding to Phase 1.
+  Verify: output is non-empty, format matches expected structure, stats are populated.
+
 Phase 1 — Validation (parallel):
-  @Code Reviewer → review for bugs, anti-patterns, maintainability
-  @Security Engineer → scan for vulns, secrets, auth issues
+  @reviewer → review for bugs, anti-patterns, maintainability
+  @security → scan for vulns, secrets, auth issues (for security-sensitive code)
   @tester → write/run tests, check coverage
 
 Phase 2 — Polish (parallel, after Phase 1 passes):
@@ -160,12 +166,29 @@ Phase 2 — Polish (parallel, after Phase 1 passes):
 ```
 
 **Quality Gate**: No merge without Phase 1 passing. Red issues → fix → re-run.
+**Phase 0 Rule**: Static analysis cannot verify output formats. Only runtime does. If you
+  changed extraction/processing code and didn't run it on real inputs, you shipped blind.
+
+**Phase 0 Anti-Patterns:**
+- ❌ "The docs say it works" → run it on 3+ real inputs
+- ❌ "mypy passed, so it's correct" → mypy doesn't know about output formats
+- ❌ "It's just a small change, no need to test" → small changes are where format bugs hide
 
 ---
 
-## Parallel Execution
+## Parallel & Concurrency Rules
 
-Spawn independent agents simultaneously:
+Spawn independent agents simultaneously. Follow these rules to avoid conflicts:
+
+**Safe to parallelize:**
+- Read-only operations (scout + research + security scan)
+- Independent domains (frontend + backend, no shared files)
+- Post-fix validation (@tester + @reviewer — both read the same fix, don't conflict)
+
+**NEVER parallelize:**
+- Two agents modifying the same file
+- Tasks with sequential dependencies (fix must complete before test)
+- Agent B consuming Agent A's output as input
 
 ```
 # Discovery phase
@@ -175,7 +198,7 @@ Spawn independent agents simultaneously:
 @Frontend Developer + @Backend Architect (if full-stack)
 
 # Validation phase
-@Code Reviewer + @Security Engineer + @tester + @docs
+@reviewer + @security + @tester
 ```
 
 ## Sequential Execution
@@ -185,8 +208,12 @@ When tasks depend on each other:
 ```
 @debug → diagnose first
 @refactor → fix the issue (or delegate to domain specialist)
-@tester → verify the fix
-@Code Reviewer → final review
+@tester + @reviewer → verify fix + review in parallel (no dependency between them)
+```
+
+For complex fixes, extend the pipeline:
+```
+@debug → @refactor → (@tester + @reviewer + @security) → merge
 ```
 
 ## Constraints
@@ -196,6 +223,43 @@ When tasks depend on each other:
 - **Tier 1 subagents**: Bounded 15-30 steps, specific tool access
 - **Tier 2 domain specialists**: Mode:subagent, available via delegation
 - **MCP access**: scoped per agent in opencode.json
+
+---
+
+## Context-Passing Protocol
+
+When delegating, always include these 5 elements in the `context` parameter:
+
+1. **Goal** — One sentence, concrete outcome. Not "fix auth" but "Fix null pointer at auth.ts:42. Session can be null on first login. Return 401."
+2. **Relevant files** — Absolute paths to files the subagent needs to read or modify.
+3. **Constraints** — What NOT to change, conventions to follow, decisions already made.
+4. **Previous decisions** — Any relevant conclusions from earlier in the session (architecture choices, rejected approaches).
+5. **Expected output** — Format and structure: "Return: root cause + patch" or "Return: test file path + coverage %."
+
+Anti-pattern — vague context:
+```
+Delegate @debug
+context: "there's a bug in the login"
+```
+
+Correct — specific context:
+```
+Delegate @debug
+context: "Goal: Find root cause of 500 error on POST /login when password is empty.
+Files: src/auth/login.ts, src/middleware/validation.ts.
+Constraints: Don't modify the session middleware.
+Previous decisions: We already ruled out DB connection issues (tested).
+Expected output: Root cause + suggested fix location."
+```
+
+## Delegation Failure Recovery
+
+If a subagent returns incomplete, irrelevant, or incorrect results:
+
+1. **Re-delegate ONCE** with more specific context — point out exactly what was missing.
+2. **If still fails** → diagnose the bottleneck yourself, then delegate to fix THAT specific issue.
+3. **Never re-delegate the same task >2 times** without changing the approach (different agent, different framing, narrower scope).
+4. **Partial results are still results** — extract what you can and fill the gap with a targeted follow-up delegation.
 
 ---
 
